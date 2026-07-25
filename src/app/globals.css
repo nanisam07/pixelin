@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #001F4D;
+  --color-primary-light: #003366;
+  --color-primary-dark: #001a3d;
+  --color-primary-muted: rgba(0, 31, 77, 0.1);
+  --color-accent: #FF6633;
+  --color-accent-light: #FF8855;
+  --color-accent-dark: #CC5522;
+  --color-accent-muted: rgba(255, 102, 51, 0.1);
+  --color-secondary: #52C452;
+  --color-secondary-light: #6FD46F;
+  --color-secondary-dark: #3AA43A;
+  --color-secondary-muted: rgba(82, 196, 82, 0.1);
+  --color-darkBg: #001F4D;
+  --color-lightBg: #f8fafc;
+  --color-panelBg: rgba(0, 31, 77, 0.85);
+
+  --font-headline: var(--font-playfair), serif;
+  --font-body: var(--font-inter), sans-serif;
+  --font-label: var(--font-space-grotesk), sans-serif;
+}
+
+/* Custom Scroll animations */
+@keyframes scrollLeft {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Scrollbar Style */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #001F4D;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #FF6633;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #FF8855;
+}
+
+/* Glassmorphism helpers */
+.glass-card {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-card-dark {
+  background: rgba(0, 31, 77, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 102, 51, 0.2);
+}
+
+/* Staggered Animations */
+.animate-fade-up {
+  animation: fadeUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+
+.delay-1 {
+  animation-delay: 0.15s;
+}
+
+.delay-2 {
+  animation-delay: 0.35s;
+}
+
+.delay-3 {
+  animation-delay: 0.55s;
+}
+
+.delay-4 {
+  animation-delay: 0.75s;
+}
+
+/* Custom Reveal on scroll utilities */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}

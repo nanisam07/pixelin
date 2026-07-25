@@ -1,0 +1,31 @@
+{
+  "Whitefly": {
+    "telugu": "తెల్ల పురుగు",
+    "products": ["pixel-4d", "maxcott"]
+  },
+
+  "Thrips": {
+    "telugu": "పై ముడత కీటకం",
+    "products": ["pixel-4d", "extend"]
+  },
+
+  "Mites": {
+    "telugu": "ఎండు పురుగు",
+    "products": ["pixel-4d", "extend"]
+  },
+
+  "Aphid": {
+    "telugu": "పేను పురుగు",
+    "products": ["maxcott"]
+  },
+
+  "Jassid": {
+    "telugu": "ఆకు కాలు పురుగు",
+    "products": ["maxcott"]
+  },
+
+  "Bollworm": {
+    "telugu": "గులాబీ పురుగు",
+    "products": ["expel-r"]
+  }
+}
