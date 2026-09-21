@@ -1,0 +1,463 @@
+import os
+import csv
+import json
+import re
+
+def clean_txt(text):
+    return text.replace("", "—").strip()
+
+def parse_guide_documents():
+    workspace = "."
+    data_dir = os.path.join(workspace, "public", "data")
+    
+    paddy_csv_path = os.path.join(data_dir, "paddy-solutions.csv")
+    cotton_csv_path = os.path.join(data_dir, "cotton-solutions.csv")
+    
+    # We will build a structured JSON database
+    db = {
+        "diseases": {},
+        "products": {}
+    }
+    
+    # Define our core 13 products with their image paths and fallback details
+    # We will refine these details by parsing the guides, but keep robust defaults.
+    products_registry = {
+        "EXPEL-R": {
+            "name": "EXPel-R",
+            "id": "expel-r",
+            "category": "Bio Insecticide",
+            "technical_composition": "Botanical Herbal Extract (Targets Lepidopterans)",
+            "dosage": "250ml per acre",
+            "suitable_crops": ["Paddy", "Cotton", "Vegetables"],
+            "target_pest": "Stem Borer, Leaf Folder, Bollworms (Pink, Spotted, American), Fruit Borer, Shoot Borer, Caterpillars",
+            "application_method": "Foliar Spray",
+            "advantages": ["Biological and 100% organic", "Resistance-proof knockdown", "Zero chemical residue", "Safe for farmers and beneficial insects"],
+            "additional_notes": "Highly effective botanical controller that terminates chewing pests and bollworms inside the stems and bolls.",
+            "image_path": "/product-images/cotton/Expel-R.jpeg"
+        },
+        "DODGER": {
+            "name": "PIXEL DODGER",
+            "id": "dodger",
+            "category": "Insecticide",
+            "technical_composition": "Dinotefuran 15% + Pymetrozine 45% WG",
+            "dosage": "133g per acre",
+            "suitable_crops": ["Paddy"],
+            "target_pest": "Brown Plant Hopper (BPH), White Backed Plant Hopper (WBPH), Green Leafhopper",
+            "application_method": "Foliar Spray (Direct spray towards stem base)",
+            "advantages": ["Systemic action provides long-lasting control", "Stops insect feeding within minutes", "Prevents Hopper Burn", "High water solubility"],
+            "additional_notes": "High efficacy systemic protection against sucking pests in rice.",
+            "image_path": "/product-images/paddy/Dodger.jpeg"
+        },
+        "PIXEL SENSA": {
+            "name": "PIXEL SENSA",
+            "id": "pixel-sensa",
+            "category": "Fungicide",
+            "technical_composition": "Picoxystrobin 6.78% + Tricyclazole 20.33% w/w SC",
+            "dosage": "400ml per acre",
+            "suitable_crops": ["Paddy"],
+            "target_pest": "Rice Blast (Leaf Blast, Neck Blast, Nodal Blast), Sheath Blight",
+            "application_method": "Foliar Spray (Apply preventative spray at booting stage)",
+            "advantages": ["Dual systemic protection", "Prevents economic fungal damage", "Improves grain shine and crop yield", "Rainfastness"],
+            "additional_notes": "Locks out fungal pathogens and provides exceptional preventative defense.",
+            "image_path": "/product-images/paddy/Pixel_Sena.jpeg"
+        },
+        "PIXEL 4D": {
+            "name": "PIXEL 4D",
+            "id": "pixel-4d",
+            "category": "Insecticide",
+            "technical_composition": "Fipronil 10% + Diafenthiuron 30% WG",
+            "dosage": "250g per acre",
+            "suitable_crops": ["Cotton", "Chilli", "Vegetables"],
+            "target_pest": "Whitefly, Thrips, Mites, Aphids, Jassids",
+            "application_method": "Foliar Spray",
+            "advantages": ["Knocks down sucking pests on contact", "Vapour action reaches pests hiding in curled leaves", "Diafenthiuron stops pest energy and feeding immediately", "Fipronil provides fast knockdown"],
+            "additional_notes": "Broad-spectrum control targeting Thrips, Whiteflies, and Mites simultaneously on Cotton.",
+            "image_path": "/product-images/cotton/Pixel4D.jpeg"
+        },
+        "EXTEND": {
+            "name": "EXTEND",
+            "id": "extend",
+            "category": "Bio Plant Protector",
+            "technical_composition": "Natural Herbal Extracts",
+            "dosage": "250ml per acre",
+            "suitable_crops": ["Cotton", "Vegetables", "Horticulture"],
+            "target_pest": "Thrips, Mites, Sucking Pests",
+            "application_method": "Foliar Spray",
+            "advantages": ["Natural herbal extract - no synthetic chemicals", "Disrupts pest feeding and reproduction without chemical stress", "Zero harmful residues", "Promotes vegetative plant growth alongside protection"],
+            "additional_notes": "Think of Extend as a natural bodyguard for the cotton plant. Stops thrips and mites early.",
+            "image_path": "/product-images/cotton/Extend.jpeg"
+        },
+        "MAXCOTT": {
+            "name": "MAXCOTT",
+            "id": "maxcott",
+            "category": "Insecticide + Growth",
+            "technical_composition": "Sucking Pest Insecticide + Growth Stimulant Complex",
+            "dosage": "250ml per acre",
+            "suitable_crops": ["Cotton"],
+            "target_pest": "Whitefly, Aphids, Jassids",
+            "application_method": "Foliar Spray",
+            "advantages": ["Knocks down sucking insects instantly", "Stimulates lateral branching", "Boosts leaf greening and vegetative recovery", "Highly cost-effective"],
+            "additional_notes": "Dual-action knocks down sucking insects while boosting growth.",
+            "image_path": "/product-images/cotton/Maxcott.jpeg"
+        },
+        "FLORA": {
+            "name": "FLORA",
+            "id": "flora",
+            "category": "Yield Booster",
+            "technical_composition": "Hormone Regulating Biostimulant + Trace Minerals",
+            "dosage": "250ml per acre",
+            "suitable_crops": ["Cotton", "Vegetables", "Tomato", "Chilli", "Brinjal", "Okra", "Cucumber", "Beans"],
+            "target_pest": "Flower Drop, Square Drop, Bud Drop, Fruit Drop",
+            "application_method": "Foliar Spray (Apply at pre-flowering and peak flowering)",
+            "advantages": ["Reduces blossom drop under heat or water stress", "Directs plant nutrition to developing flower bolls or fruits", "Increases total flowers and fruit set", "Improves fruit size and quality"],
+            "additional_notes": "Flora stops the drop. Every dropped flower is income lost. Highly recommended for vegetables and cotton.",
+            "image_path": "/product-images/vegetables/Flora.jpeg"
+        },
+        "BUILDER": {
+            "name": "BUILDER",
+            "id": "builder",
+            "category": "Micronutrient",
+            "technical_composition": "Magnesium (Mg) + Zinc (Zn) + Phosphorus (P) + Boron (B) Complex",
+            "dosage": "250ml per acre",
+            "suitable_crops": ["Vegetables", "Tomato", "Chilli", "Brinjal", "Okra", "Cucurbits"],
+            "target_pest": "Blossom End Rot, Deformed Fruit, Flower Drop, Trace Mineral Deficiency",
+            "application_method": "Foliar Spray or Soil Drip",
+            "advantages": ["Supplies crucial trace elements for cellular walls", "Builds tissue structural integrity before flowering", "Prevents fruit cracking and rotting", "Enhances pollen tube development"],
+            "additional_notes": "The targeted meal before flowering. Builds bigger, better fruits.",
+            "image_path": "/product-images/vegetables/Pixel_Builder.jpeg"
+        },
+        "PROBION": {
+            "name": "PROBION",
+            "id": "probion",
+            "category": "Biostimulant",
+            "technical_composition": "Pre-digested L-Amino Acids & Organic Peptides",
+            "dosage": "250ml per acre",
+            "suitable_crops": ["Paddy", "Cotton", "Vegetables", "Tomato", "Chilli", "Brinjal", "Okra", "Cucurbits"],
+            "target_pest": "Stunted Growth, Transplant Shock, Temperature/Drought/Chemical Stress",
+            "application_method": "Foliar Spray",
+            "advantages": ["Contains highly bioavailable L-amino acids", "Accelerates vegetative growth and leaf expansion", "Helps crops bypass normal plant synthesis, saving energy", "Fast recovery from environmental and herbicide stress"],
+            "additional_notes": "Pre-digested nutrition. Faster growth and stress recovery.",
+            "image_path": "/product-images/vegetables/Probin.jpeg"
+        },
+        "K-MATE": {
+            "name": "K-MATE",
+            "id": "k-mate",
+            "category": "Soil Health",
+            "technical_composition": "Concentrated Potassium Humate (Humic Acid 75% + Potassium 12% w/w)",
+            "dosage": "250ml per acre (or 1-2 kg via drip)",
+            "suitable_crops": ["Vegetables", "Tomato", "Chilli", "Brinjal", "Okra", "Cucurbits"],
+            "target_pest": "Stunted Roots, Poor Nutrient Uptake, Hard Soil",
+            "application_method": "Drip Fertigation or Soil Application",
+            "advantages": ["Boosts root mass development", "Conditioner that restores soil structure and aeration", "Unlocks locked-up soil phosphorus", "Enhances water retention capacity"],
+            "additional_notes": "The soil doctor that works through the drip pipe.",
+            "image_path": "/product-images/vegetables/Pixel_K-Mate.jpeg"
+        },
+        "LAMIGO": {
+            "name": "LAMIGO",
+            "id": "lamigo",
+            "category": "Insecticide",
+            "technical_composition": "Chlorantraniliprole 9.3% + Lambda-cyhalothrin 4.6% ZC",
+            "dosage": "100ml per acre",
+            "suitable_crops": ["Paddy", "Vegetables", "Tomato", "Chilli", "Brinjal", "Okra", "Cabbage", "Cauliflower"],
+            "target_pest": "Fruit Borer, Shoot Borer, Stem Borer, Leaf Folder, Caterpillars, Diamondback Moth",
+            "application_method": "Foliar Spray",
+            "advantages": ["Fast rainfast knockdown shield (within 2 hours)", "Provides 10-14 days residual protection", "Dual-mode contact and systemic action", "Stops insect feeding instantly"],
+            "additional_notes": "10-14 days residual. Rainfast in 2 hours.",
+            "image_path": "/product-images/vegetables/Lamigo.jpeg"
+        },
+        "AIMER": {
+            "name": "AIMER",
+            "id": "aimer",
+            "category": "Insecticide",
+            "technical_composition": "Chlorantraniliprole 18.5% SC",
+            "dosage": "60ml per acre",
+            "suitable_crops": ["Paddy", "Cotton", "Vegetables"],
+            "target_pest": "Stem Borer, Leaf Folder, Bollworms",
+            "application_method": "Foliar Spray",
+            "advantages": ["Long-duration systemic preventive protection", "Keeps crop vascular channels clear", "Excellent safety profile for target crops", "Protects new growth actively"],
+            "additional_notes": "Long-duration systemic preventive shield targeting stem borer and leaf folder larvae before entry.",
+            "image_path": "/product-images/paddy/Expel-R.jpeg" # Fallback image
+        },
+        "PURE AUXIN": {
+            "name": "PURE AUXIN",
+            "id": "pure-auxin",
+            "category": "PGR",
+            "technical_composition": "Root Booster Formulation",
+            "dosage": "250ml per acre",
+            "suitable_crops": ["Paddy"],
+            "target_pest": "Weak Roots, Transplant Recovery Issues, Poor Tillering",
+            "application_method": "Soil Application or Drip",
+            "advantages": ["Triggers prolific lateral root network branching", "Ensures optimal nutrient absorption capacity", "Maximizes primary productive tillering"],
+            "additional_notes": "Explosive root growth from day one.",
+            "image_path": "/product-images/paddy/Auxin.jpeg"
+        },
+        "KARBAC": {
+            "name": "KARBAC",
+            "id": "karbac",
+            "category": "Soil Health",
+            "technical_composition": "Leonardite Humic + Fulvic Acid",
+            "dosage": "250ml per acre",
+            "suitable_crops": ["Paddy"],
+            "target_pest": "Soil Degradation, Low Organic Carbon, Weak Root Systems",
+            "application_method": "Soil Application",
+            "advantages": ["Restores soil health season after season", "Improves soil structure and water retention", "Boosts microbial activity and nutrient absorption"],
+            "additional_notes": "Formulated humic root booster.",
+            "image_path": "/product-images/paddy/Pixel_Karbac.jpeg"
+        }
+    }
+
+    # Disease database mapping: normalized disease name -> details
+    # We will build Paddy, Cotton, and Vegetables (Tomato, Potato, Pepper) details
+    diseases_registry = {
+        "paddy_brown_plant_hopper": {
+            "crop": "Paddy",
+            "disease": "Brown Plant Hopper (BPH)",
+            "symptoms": ["Sudden drying up of crop patches starting from the center of the field, resembling fire damage ('Hopper Burn')", "Presence of hoppers at the base of rice stems", "Yellowing and weakening of leaves"],
+            "cause": "Brown Plant Hopper (BPH) feeds on the sap of rice stems. Warm, humid climates cause their population to explode.",
+            "preventive_measures": ["Provide proper row spacing and ventilation paths (paths every 2-3 meters)", "Drain water from the field for 3-4 days to disrupt their lifecycle", "Avoid excess Nitrogen fertilizer"],
+            "products": ["DODGER", "TAFE"]
+        },
+        "paddy_stem_borer": {
+            "crop": "Paddy",
+            "disease": "Stem Borer",
+            "symptoms": ["'Dead hearts' where the main shoot dries up", "Whiteheads (empty panicles that turn white and fail to fill)", "Larval entry holes on the rice stem base"],
+            "cause": "Lepidopteran stem borer larvae bore into the stem, cutting off vascular channels and preventing nutrient transport.",
+            "preventive_measures": ["Clip leaf tips during transplanting to destroy egg masses", "Deep summer plowing to expose overwintering pupae", "Maintain field sanitation"],
+            "products": ["EXPEL-R", "LAMIGO", "AIMER"]
+        },
+        "paddy_leaf_folder": {
+            "crop": "Paddy",
+            "disease": "Leaf Folder",
+            "symptoms": ["Folded leaves with longitudinal white papery streaks", "Scraped leaf surfaces", "Presence of caterpillar inside the leaf fold"],
+            "cause": "Leaf folder larvae fold the leaf margins together and feed on the green chlorophyll inside the fold.",
+            "preventive_measures": ["Keep fields clean of grassy weeds", "Avoid excessive application of Nitrogen fertilizers", "Use physical ropes to dislodge larvae early"],
+            "products": ["EXPEL-R", "LAMIGO", "AIMER"]
+        },
+        "paddy_rice_blast": {
+            "crop": "Paddy",
+            "disease": "Rice Blast (Leaf Blast / Neck Blast)",
+            "symptoms": ["Spindle-shaped lesions with grayish centers and dark brown borders on leaves", "Neck blast shows dark lesions at the panicle base, causing heads to break", "Nodal blast turns joints black and causes breaking"],
+            "cause": "Pyricularia oryzae fungal pathogen. Spreads rapidly in high humidity, cool nights, and foggy conditions.",
+            "preventive_measures": ["Use resistant seed varieties", "Avoid excessive Nitrogen applications which encourage lush foliage", "Maintain optimum plant spacing"],
+            "products": ["PIXEL SENSA", "TRIKOZE"]
+        },
+        "paddy_sheath_blight": {
+            "crop": "Paddy",
+            "disease": "Sheath Blight",
+            "symptoms": ["Snake-skin like greenish-gray lesions on leaf sheaths near water level", "Lesions enlarge, merge, and spread up to upper leaves", "Poor grain filling and lodging in severe spots"],
+            "cause": "Rhizoctonia solani fungal pathogen, thriving in high moisture, temperature, and high planting density.",
+            "preventive_measures": ["Keep bunds clean of host weeds", "Drain water from fields during early vegetative stages", "Maintain recommended seed rates"],
+            "products": ["PIXEL SENSA", "TRIKOZE"]
+        },
+        "paddy_bacterial_leaf_blight": {
+            "crop": "Paddy",
+            "disease": "Bacterial Leaf Blight (BLB)",
+            "symptoms": ["Wavy yellow-to-white stripes starting from leaf tips and margins", "Leaf drying and wilting ('Kreseki' phase in seedlings)", "Bacterial ooze droplets (yellow beads) under high humidity"],
+            "cause": "Xanthomonas oryzae pv. oryzae bacteria. Enters through leaf wounds, multiplying in vascular tissues.",
+            "preventive_measures": ["Secure certified disease-free seeds", "Avoid clipping leaf tips at transplanting if BLB is active", "Drain water to reduce humidity"],
+            "products": ["PROMYCIN", "KLOCK", "COZI"]
+        },
+        "paddy_false_smut": {
+            "crop": "Paddy",
+            "disease": "False Smut",
+            "symptoms": ["Individual grains turn into large, velvety orange-yellow balls", "Swellings turn olive-green or velvety black later", "Grain quality and weight drop significantly"],
+            "cause": "Ustilaginoidea virens fungus. Infection occurs at flowering, favored by high humidity and rain during booting.",
+            "preventive_measures": ["Destroy infected panicles/smut balls manually from fields", "Perform seed treatment with bio-fungicides", "Follow crop rotation"],
+            "products": ["PROMYCIN", "KLOCK", "COZI"]
+        },
+        # --- COTTON ---
+        "cotton_whitefly_aphids_jassids": {
+            "crop": "Cotton",
+            "disease": "Whitefly, Aphids & Jassids",
+            "symptoms": ["Yellowing, crinkling, and downward curling of leaf margins", "Sticky honeydew secretions on leaves", "Growth of black sooty mould, blocking sunlight", "Hopper burn (leaves turn yellow, brick-red, then drop)"],
+            "cause": "Sucking pests feeding on plant sap. Whiteflies spread the leaf curl virus. Aphids secrete sticky honeydew.",
+            "preventive_measures": ["Avoid excess Nitrogen fertilizers", "Deploy yellow sticky traps (10-15 traps per acre)", "Grow border crops like maize/sorghum to act as barriers"],
+            "products": ["PIXEL 4D", "MAXCOTT", "ROLLOUT"]
+        },
+        "cotton_thrips_black_thrips": {
+            "crop": "Cotton",
+            "disease": "Thrips & Black Thrips",
+            "symptoms": ["Leaves curl upward (Pai Mudatha)", "Silver-white streaks or patches on the leaf underside", "Damaged growing tips leading to stunted growth and abnormal branching"],
+            "cause": "Tiny thrips insects scrape plant tissues and suck sap, particularly damaging in the first 6 weeks of crop growth.",
+            "preventive_measures": ["Maintain proper field humidity", "Avoid early chemical sprays to conserve natural predatory mites", "Ensure optimum moisture during early vegetative phase"],
+            "products": ["PIXEL 4D", "EXTEND"]
+        },
+        "cotton_bollworms": {
+            "crop": "Cotton",
+            "disease": "Bollworms (Pink, Spotted, American)",
+            "symptoms": ["Deformed rosette flowers (half-opened, flower petals twisted)", "Caterpillars boring into tender squares, flowers, and mature bolls", "Cotton fibers stained yellow, hollowed seeds, premature boll dropping"],
+            "cause": "Pectinophora gossypiella (Pink Bollworm) and Helicoverpa armigera (American Bollworm) larvae feed internally inside squares and bolls.",
+            "preventive_measures": ["Install pheromone traps (5 traps per acre) for early monitoring", "Collect and destroy rosette flowers and fallen squares manually", "Deep summer plowing to expose pupae"],
+            "products": ["EXPEL-R", "LAMIGO", "AIMER", "AKYRA", "SKIPPER"]
+        },
+        "cotton_alternaria_grey_mildew_anthracnose": {
+            "crop": "Cotton",
+            "disease": "Alternaria, Grey Mildew, Anthracnose",
+            "symptoms": ["Circular reddish-brown leaf spots with concentric rings (Alternaria)", "White powdery growth resembling gray mold on leaf under-surface (Grey Mildew)", "Sunken spots on leaves and bolls (Anthracnose)"],
+            "cause": "Fungal pathogens thriving during high relative humidity and warm post-monsoon conditions.",
+            "preventive_measures": ["Perform seed treatment with bio-stimulants", "Remove and destroy crop debris after harvest", "Ensure adequate crop spacing for aeration"],
+            "products": ["PIXEL CURE", "K-PHOS", "PI-CAM", "PROTOCAL"]
+        },
+        "cotton_bacterial_blight": {
+            "crop": "Cotton",
+            "disease": "Bacterial Blight / Angular Leaf Spot",
+            "symptoms": ["Water-soaked angular leaf spots bordered by leaf veins", "Black streaks on leaf petioles and stems ('Black Arm' phase)", "Sunken water-soaked spots on bolls leading to internal decay"],
+            "cause": "Xanthomonas citri pv. malvacearum bacteria entering through leaf stomata and wounds.",
+            "preventive_measures": ["Use certified disease-resistant seeds", "Avoid sprinkler irrigation in affected plots", "Maintain clean crop borders"],
+            "products": ["PROMYCIN", "KLOCK", "COZI"]
+        },
+        "cotton_boll_rot": {
+            "crop": "Cotton",
+            "disease": "Boll Rot",
+            "symptoms": ["Water-soaked lesions on young bolls", "Bolls turn dark brown to black and rot internally", "Gummy discharge and fiber discoloration"],
+            "cause": "Secondary bacterial and fungal pathogens invading bolls damaged by bollworms or sucking pests.",
+            "preventive_measures": ["Control bollworm populations effectively", "Avoid dense canopy planting, prune lower branches for aeration", "Drain waterlogged fields immediately"],
+            "products": ["PIXEL CURE", "COZI", "KLOCK"]
+        },
+        # --- VEGETABLES (TOMATO, PEPPER, POTATO) ---
+        "tomato_bacterial_spot": {
+            "crop": "Tomato",
+            "disease": "Tomato Bacterial Spot",
+            "symptoms": ["Small, water-soaked, dark spots on leaves, becoming angular and paper-like", "Scabby, black, raised spots on green tomato fruits", "Blossom drop in severe cases"],
+            "cause": "Xanthomonas bacterial pathogen, thriving in wet, warm conditions and spreading via splashing water.",
+            "preventive_measures": ["Avoid overhead irrigation; use drip system", "Prune lower leaves to reduce soil splash", "Spray preventative copper-based bio-protectors"],
+            "products": ["PROMYCIN", "KLOCK"]
+        },
+        "tomato_early_blight": {
+            "crop": "Tomato",
+            "disease": "Tomato Early Blight",
+            "symptoms": ["Circular brown spots with concentric 'target-board' rings on older leaves", "Leaves turn yellow and drop prematurely, causing sunscald on fruits", "Dark, leathery lesions at the stem end of fruits"],
+            "cause": "Alternaria solani fungal pathogen. Spreads in high humidity and moderate temperatures.",
+            "preventive_measures": ["Implement 3-year crop rotation", "Mulch around plants to block soil-borne spores", "Provide trace minerals like Magnesium and Zinc to boost defense"],
+            "products": ["PIXEL CURE", "PROTOCAL"]
+        },
+        "tomato_late_blight": {
+            "crop": "Tomato",
+            "disease": "Tomato Late Blight",
+            "symptoms": ["Large, irregular, water-soaked brown patches on leaves, expanding rapidly", "White downy mold on the leaf underside in humid conditions", "Large, firm, greasy brown spots on tomato fruits"],
+            "cause": "Phytophthora infestans oomycete pathogen. Highly destructive, spreading rapidly in cool, wet weather.",
+            "preventive_measures": ["Destroy volunteer tomato and potato plants nearby", "Avoid working in the field when leaves are wet", "Foliar amino acid spray (Probion) to accelerate recovery"],
+            "products": ["PI-CAM", "AZEB"]
+        },
+        "tomato_leaf_mold": {
+            "crop": "Tomato",
+            "disease": "Tomato Leaf Mold",
+            "symptoms": ["Pale green or yellow spots on the upper leaf surface", "Olive-green, velvety fungal growth on the leaf underside", "Leaves curl, wither, and drop prematurely"],
+            "cause": "Passalora fulva fungus, primarily affecting greenhouse tomatoes or high-density field crops with poor ventilation.",
+            "preventive_measures": ["Ensure high row spacing and crop aeration", "Avoid wetting foliage during irrigation", "Maintain balanced phosphorus and boron levels"],
+            "products": ["PIXEL CURE", "K-PHOS"]
+        },
+        "tomato_septoria_leaf_spot": {
+            "crop": "Tomato",
+            "disease": "Tomato Septoria Leaf Spot",
+            "symptoms": ["Numerous small, circular spots with dark brown margins and grey centers on leaves", "Tiny black fruiting bodies (pycnidia) in the center of spots", "Defoliation starting from base, reducing yield"],
+            "cause": "Septoria lycopersici fungus, over-wintering on infected crop debris and spreading via rain-splashes.",
+            "preventive_measures": ["Remove and bury infected plant residue post-harvest", "Avoid dense planting; keep foliage dry", "Apply trace mineral sprays to strengthen cell wall structures"],
+            "products": ["PIXEL CURE", "PROTOCAL", "BUILDER"]
+        },
+        "tomato_spider_mites_two-spotted_spider_mite": {
+            "crop": "Tomato",
+            "disease": "Tomato Spider Mites",
+            "symptoms": ["Fine yellow or white stippling (spots) on the upper leaf surface", "Fine webbing on the leaf underside and stems in severe cases", "Leaves turn bronze, dry up, and drop; plants get stunted"],
+            "cause": "Tetranychus urticae spider mites. Populate rapidly under hot, dry conditions.",
+            "preventive_measures": ["Keep fields clean of weed hosts", "Use overhead water sprays occasionally to wash off mites in dry heat", "Apply bio plant protector (Extend) early"],
+            "products": ["EXTEND", "MITOX"]
+        },
+        "tomato_target_spot": {
+            "crop": "Tomato",
+            "disease": "Tomato Target Spot",
+            "symptoms": ["Zonate leaf spots with light brown centers and dark borders", "Pits or target-like lesions on green and ripe fruits", "Premature flower bud drop"],
+            "cause": "Corynespora cassiicola fungus, causing defoliation and direct fruit lesions in warm, wet climates.",
+            "preventive_measures": ["Keep plants off the ground by staking and pruning", "Prune lower suckers to improve air flow", "Spray Flora to prevent flower drop during early spot infection"],
+            "products": ["PIXEL CURE", "FLORA"]
+        },
+        "tomato_tomato_yellow_leaf_curl_virus": {
+            "crop": "Tomato",
+            "disease": "Tomato Yellow Leaf Curl Virus (TYLCV)",
+            "symptoms": ["Severe leaf curling upward and inward", "Yellowing of leaves between veins (interveinal chlorosis)", "Extremely small leaf size, stunted plant growth, complete failure of fruit set"],
+            "cause": "Begomovirus spread exclusively by Whitefly vector. No chemical cure once infected.",
+            "preventive_measures": ["Control whiteflies immediately using systemic insecticides", "Use reflective mulches to repel whiteflies", "Pull out and burn infected viral plants immediately"],
+            "products": ["LAMIGO", "MAXCOTT"]
+        },
+        "tomato_tomato_mosaic_virus": {
+            "crop": "Tomato",
+            "disease": "Tomato Mosaic Virus (ToMV)",
+            "symptoms": ["Mottled light and dark green mosaic patterns on leaves", "Leaf crinkling, blistering, and 'shoestringing' (narrowing)", "Internal brown streaks on tomato fruits"],
+            "cause": "Tobamovirus spread mechanically via infected hands, tools, or crop debris. No chemical cure.",
+            "preventive_measures": ["Wash hands and tools with soap/disinfectant before handling plants", "Sow only certified virus-free seeds", "Pull out infected plants promptly"],
+            "products": ["PROBION", "PROMYCIN"]  # Probion for stress, Promycin to prevent secondary bacterial infection
+        },
+        "pepper_bacterial_spot": {
+            "crop": "Pepper",
+            "disease": "Pepper Bacterial Spot",
+            "symptoms": ["Small, angular, dark spots on pepper leaves", "Leaves turn yellow and fall off prematurely", "Scabby raised lesions on pepper fruit pods"],
+            "cause": "Xanthomonas bacterial pathogen, thriving in wet, warm conditions.",
+            "preventive_measures": ["Avoid overhead watering", "Maintain proper crop spacing", "Prune lower branches"],
+            "products": ["PROMYCIN", "KLOCK"]
+        },
+        "potato_early_blight": {
+            "crop": "Potato",
+            "disease": "Potato Early Blight",
+            "symptoms": ["Concentric dark rings (target-spots) on lower potato leaves", "Dry, leathery, dark spots on potato tubers", "Premature defoliation, reducing tuber sizes"],
+            "cause": "Alternaria solani fungal pathogen, spreading via air currents and water splashes.",
+            "preventive_measures": ["Avoid overhead irrigation", "Perform crop rotation", "Supply L-amino acids (Probion) to accelerate recovery"],
+            "products": ["PIXEL CURE", "PROBION"]
+        },
+        "potato_late_blight": {
+            "crop": "Potato",
+            "disease": "Potato Late Blight",
+            "symptoms": ["Rapidly spreading dark brown spots on leaves", "White downy mold on the leaf underside in wet conditions", "Brownish-purple dry rot on tubers"],
+            "cause": "Phytophthora infestans oomycete pathogen, extremely aggressive in cool, wet weather.",
+            "preventive_measures": ["Prune and expose crop beds for solar aeration", "Store tubers in cool, dry conditions to prevent rot spread", "Avoid working in fields during wet weather"],
+            "products": ["PI-CAM", "AZEB"]
+        }
+    }
+    
+    # 4. Integrate solutions CSVs dynamically to populate symptoms/dosages where available
+    print("Reading paddy-solutions.csv...")
+    if os.path.exists(paddy_csv_path):
+        with open(paddy_csv_path, mode='r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            # Row mapping check
+            for row in reader:
+                prod_name = row.get("Product", "").strip().upper()
+                if prod_name in products_registry:
+                    # Update tech/dose if empty
+                    tech = row.get("Technical composition", "").strip()
+                    if tech:
+                        products_registry[prod_name]["technical_composition"] = tech
+                    dose = row.get("Dose / Acre", "").strip()
+                    if dose:
+                        products_registry[prod_name]["dosage"] = dose + " per acre"
+                        
+    print("Reading cotton-solutions.csv...")
+    if os.path.exists(cotton_csv_path):
+        with open(cotton_csv_path, mode='r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                prod_name = row.get("Recommended Product", "").strip().upper()
+                if prod_name in products_registry:
+                    tech = row.get("Technical / Target Pest", "").strip()
+                    if tech and "composition" not in tech.lower():
+                        products_registry[prod_name]["target_pest"] = tech
+                    dose = row.get("Base Dosage / Acre", "").strip()
+                    if dose:
+                        products_registry[prod_name]["dosage"] = dose + " per acre"
+                        
+    # Populate the final DB structure
+    db["products"] = products_registry
+    db["diseases"] = diseases_registry
+    
+    # Save the database
+    out_dir = os.path.join(workspace, "src", "knowledge")
+    os.makedirs(out_dir, exist_ok=True)
+    out_path = os.path.join(out_dir, "knowledge_db.json")
+    with open(out_path, 'w', encoding='utf-8') as f:
+        json.dump(db, f, indent=2)
+        
+    print(f"Successfully compiled knowledge database to {out_path}")
+    print(f"Total products indexed: {len(db['products'])}")
+    print(f"Total diseases indexed: {len(db['diseases'])}")
+
+if __name__ == "__main__":
+    parse_guide_documents()

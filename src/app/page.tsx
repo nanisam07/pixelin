@@ -260,10 +260,10 @@ export default function Home() {
         {/* Logo */}
         <a href="#hero" className="flex items-center gap-3 group">
           <img
-            src="/logo.png"
-            alt="Pixelin Sciences Logo"
-            className="h-12 w-auto group-hover:scale-105 transition-transform duration-300"
-          />
+  src="/pixelein_logo.png"
+  alt="Pixelin Sciences Logo"
+  className="h-16 md:h-20 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+/>
           <div>
             
           </div>
@@ -350,6 +350,9 @@ export default function Home() {
           <a href="#sustainability" className="hover:text-accent transition-colors duration-300">
             {t("nav.sustainability")}
           </a>
+          <Link href="/blogs" className="hover:text-accent transition-colors duration-300">
+            {t("nav.blogs")}
+          </Link>
           <a href="#contact" className="hover:text-accent transition-colors duration-300">
             {t("nav.contact")}
           </a>
@@ -496,6 +499,13 @@ export default function Home() {
               >
                 {t("nav.sustainability")}
               </a>
+              <Link
+                href="/blogs"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="hover:text-accent transition-colors duration-200"
+              >
+                {t("nav.blogs")}
+              </Link>
               <a
                 href="#contact"
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -529,7 +539,7 @@ export default function Home() {
       </nav>
 
       {/* ==================== SECTION 1: HERO ==================== */}
-      <section id="hero" className="relative h-screen overflow-hidden">
+      <section id="hero" className="relative min-h-screen py-24 lg:py-32 flex items-center justify-center overflow-hidden">
         {/* Hero video background */}
         <video
           autoPlay
@@ -559,22 +569,22 @@ export default function Home() {
         ></div>
         
         {/* Hero content container */}
-        <div className="relative z-10 h-full w-full max-w-6xl mx-auto px-6 md:px-12 flex flex-col justify-center items-center text-center text-white select-none pt-16">
-          <p className="eyebrow animate-fade-up font-label text-accent uppercase tracking-widest text-xs md:text-sm lg:text-base font-bold mb-4">
+        <div className="relative z-10 w-full max-w-6xl mx-auto px-6 md:px-12 flex flex-col justify-center items-center text-center text-white select-none pt-16 pb-8">
+          <p className="eyebrow font-label text-accent uppercase tracking-widest text-xs md:text-sm lg:text-base font-bold mb-4">
             Pixelin Sciences Pvt Ltd
           </p>
-          <h1 className="animate-fade-up delay-1 font-headline text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight mb-4 tracking-tight max-w-5xl">
+          <h1 className="font-headline text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight mb-4 tracking-tight max-w-5xl">
             {t("hero.title_part1")}
             <br />
             <span className="text-gradient bg-clip-text text-transparent bg-gradient-to-r from-accent to-[#fff]">
               {t("hero.title_part2")}
             </span>
           </h1>
-          <p className="animate-fade-up delay-2 font-body text-gray-200 text-sm md:text-base lg:text-lg max-w-3xl mb-6 leading-relaxed font-light">
+          <p className="font-body text-gray-200 text-sm md:text-base lg:text-lg max-w-3xl mb-6 leading-relaxed font-light">
             {t("hero.subtitle")}
           </p>
 
-          <div className="animate-fade-up delay-3 w-full max-w-2xl mx-auto flex flex-col items-center">
+          <div className="w-full max-w-2xl mx-auto flex flex-col items-center">
             {/* Language Selector Above Search Bar */}
             <div className="flex items-center gap-2 mb-3 bg-black/30 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10 text-xs md:text-sm">
               <span className="text-gray-300 flex items-center gap-1">🌐</span>
@@ -1074,7 +1084,7 @@ export default function Home() {
               {cropProducts[activeTab].items.map((prod, idx) => (
                 <div
                   key={idx}
-                  className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between min-h-[300px]"
+                  className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between min-h-[420px]"
                 >
                   <div>
                     <div className="flex justify-between items-start gap-4 mb-4">
@@ -1082,6 +1092,14 @@ export default function Home() {
                         {prod.category}
                       </span>
                       <span className="text-xs text-gray-400 font-label">{prod.stage}</span>
+                    </div>
+                    {/* Front-Facing Product Image */}
+                    <div className="relative w-full h-40 rounded-xl overflow-hidden bg-gray-50 border border-gray-100 mb-4 flex items-center justify-center p-2">
+                      <img 
+                        src={prod.image} 
+                        alt={prod.name} 
+                        className="w-full h-full object-contain hover:scale-105 transition-transform duration-300"
+                      />
                     </div>
                     <h3 className="font-headline font-bold text-2xl text-primary-dark mb-2">
                       {prod.name}
@@ -1091,7 +1109,7 @@ export default function Home() {
                       {prod.desc}
                     </p>
                   </div>
-                  <div className="border-t border-gray-100 pt-4 mt-auto">
+                  <div className="border-t border-gray-100 pt-4 mt-auto space-y-4">
                     {"targets" in prod && prod.targets && (
                       <div className="mb-2">
                         <span className="text-xs font-bold text-primary block uppercase font-label mb-1">
@@ -1127,11 +1145,36 @@ export default function Home() {
                       </div>
                     )}
                     {"timing" in prod && prod.timing && (
-                      <span className="text-xs font-bold text-primary flex items-center gap-1 uppercase font-label">
+                      <span className="text-xs font-bold text-primary flex items-center gap-1 uppercase font-label mb-2">
                         <i className="fa-solid fa-circle-info text-[10px] text-accent"></i>{" "}
                         {prod.timing}
                       </span>
                     )}
+                    
+                    {/* Learn More Inquiry trigger */}
+                    <div className="pt-2">
+                      <a
+                        href="#contact"
+                        onClick={() => {
+                          const cropSelect = document.getElementById("crop-interest") as HTMLSelectElement | null;
+                          const messageInput = document.getElementById("message") as HTMLTextAreaElement | null;
+                          if (cropSelect) {
+                            const valMap: Record<string, string> = {
+                              paddy: "Paddy",
+                              cotton: "Cotton",
+                              vegetables: "Vegetables"
+                            };
+                            cropSelect.value = valMap[activeTab] || "Paddy";
+                          }
+                          if (messageInput) {
+                            messageInput.value = `I am interested in learning more about "${prod.name}" (${prod.category}) for my crop. Please send me dosage, usage guidelines, and local dealer contact details.`;
+                          }
+                        }}
+                        className="w-full py-2.5 bg-primary hover:bg-primary-light text-white text-center text-xs font-label font-bold uppercase tracking-wider rounded-xl transition-all duration-300 flex items-center justify-center gap-2 hover:scale-[1.02] shadow-sm shadow-primary/10 cursor-pointer"
+                      >
+                        Learn More <i className="fa-solid fa-arrow-right text-[10px]"></i>
+                      </a>
+                    </div>
                   </div>
                 </div>
               ))}

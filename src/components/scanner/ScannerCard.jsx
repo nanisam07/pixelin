@@ -180,28 +180,62 @@ export default function ScannerCard({ onScanStart, onScanComplete }) {
     }
   };
 
+  // Automatic voice assistant trigger on new scan result or language change
+  useEffect(() => {
+    if (rawScanResult) {
+      triggerVoiceAssistant();
+    }
+  }, [rawScanResult, language]);
+
   const triggerVoiceAssistant = () => {
     if (!rawScanResult) return;
 
     const translatedCrop = t(`contact.${rawScanResult.crop.toLowerCase()}`);
     const translatedIssue = getTranslatedIssue(rawScanResult.issue, language);
     
+    // Construct recommended products list speech
+    let productsText = "";
+    let precautionsText = "";
+    
+    if (rawScanResult.recommendedProducts && rawScanResult.recommendedProducts.length > 0) {
+      if (language === "te") {
+        const doseText = rawScanResult.recommendedProducts.map(p => `${p.name} మోతాదు ${p.dosage}`).join(", ");
+        productsText = `సిఫార్సు చేసిన ఉత్పత్తులు: ${doseText}. `;
+      } else if (language === "hi") {
+        const doseText = rawScanResult.recommendedProducts.map(p => `${p.name} खुराक ${p.dosage}`).join(", ");
+        productsText = `अनुशंसित उत्पाद: ${doseText}। `;
+      } else if (language === "kn") {
+        const doseText = rawScanResult.recommendedProducts.map(p => `${p.name} ಪ್ರಮಾಣ ${p.dosage}`).join(", ");
+        productsText = `ಶಿಫಾರಸು ಮಾಡಿದ ಉತ್ಪನ್ನಗಳು: ${doseText}. `;
+      } else if (language === "ml") {
+        const doseText = rawScanResult.recommendedProducts.map(p => `${p.name} അളവ് ${p.dosage}`).join(", ");
+        productsText = `ശുപാർശ ചെയ്യുന്ന ഉൽപ്പന്നങ്ങൾ: ${doseText}. `;
+      } else {
+        const doseText = rawScanResult.recommendedProducts.map(p => `${p.name} dosage is ${p.dosage}`).join(", ");
+        productsText = `Recommended products are: ${doseText}. `;
+      }
+    }
+    
+    if (rawScanResult.preventiveMeasures && rawScanResult.preventiveMeasures.length > 0) {
+      precautionsText = rawScanResult.preventiveMeasures[0];
+    }
+
     let textToSpeak = "";
     switch (language) {
       case "te":
-        textToSpeak = `${t("scanner.diagnostic_report")}. పంట: ${translatedCrop}. సమస్య: ${translatedIssue}. నమ్మకమైన స్థాయి: ${rawScanResult.confidence} శాతం. తీవ్రత: ${rawScanResult.severity}.`;
+        textToSpeak = `పంట రోగనిర్ధారణ పూర్తయింది. మీ ${translatedCrop} పంటలో ${translatedIssue} సమస్యను గుర్తించాము. నమ్మకమైన స్థాయి: ${rawScanResult.confidence} శాతం. తీవ్రత: ${rawScanResult.severity}. ${productsText} భద్రతా సూచన: ${precautionsText || 'తగిన జాగ్రత్తలు తీసుకోండి'}`;
         break;
       case "hi":
-        textToSpeak = `${t("scanner.diagnostic_report")}. फसल: ${translatedCrop}. समस्या: ${translatedIssue}. आत्मविश्वास: ${rawScanResult.confidence} प्रतिशत। तीव्रता: ${rawScanResult.severity}।`;
+        textToSpeak = `फसल रोग निदान पूरा हो गया है। आपकी ${translatedCrop} की फसल में ${translatedIssue} की समस्या है। आत्मविश्वास: ${rawScanResult.confidence} प्रतिशत। तीव्रता: ${rawScanResult.severity}। ${productsText} सुरक्षा सलाह: ${precautionsText || 'उचित सावधानी बरतें'}`;
         break;
       case "kn":
-        textToSpeak = `${t("scanner.diagnostic_report")}. ಬೆಳೆ: ${translatedCrop}. ಸಮಸ್ಯೆ: ${translatedIssue}. ವಿಶ್ವಾಸಾರ್ಹತೆ: ${rawScanResult.confidence} ಪ್ರತಿಶತ. ತೀವ್ರತೆ: ${rawScanResult.severity}.`;
+        textToSpeak = `ಬೆಳೆ ರೋಗನಿರ್ಣಯ ಪೂರ್ಣಗೊಂಡಿದೆ. ನಿಮ್ಮ ${translatedCrop} ಬೆಳೆಯಲ್ಲಿ ${translatedIssue} समस्या ಪತ್ತೆಯಾಗಿದೆ. ವಿಶ್ವಾಸಾರ್ಹತೆ: ${rawScanResult.confidence} ಪ್ರತಿಶತ. ತೀವ್ರತೆ: ${rawScanResult.severity}. ${productsText} ಸುರಕ್ಷತಾ ಸಲಹೆ: ${precautionsText || 'ಸೂಕ್ತ ಮುನ್ನೆಚ್ಚರಿಕೆಗಳನ್ನು ತೆಗೆದುಕೊಳ್ಳಿ'}`;
         break;
       case "ml":
-        textToSpeak = `${t("scanner.diagnostic_report")}. വിള: ${translatedCrop}. പ്രശ്നം: ${translatedIssue}. വിശ്വസ്തത: ${rawScanResult.confidence} ശതമാനം. തീവ്രത: ${rawScanResult.severity}.`;
+        textToSpeak = `വിള രോഗനിർണയം പൂർത്തിയാക്കി. നിങ്ങളുടെ ${translatedCrop} വിളയിൽ ${translatedIssue} പ്രശ്നം കണ്ടെത്തിയിട്ടുണ്ട്. വിശ്വസ്തത: ${rawScanResult.confidence} ശതമാനം. തീവ്രത: ${rawScanResult.severity}. ${productsText} സുരക്ഷാ നിർദ്ദേശം: ${precautionsText || 'ഉചിതമായ മുൻകരുതലുകൾ എടുക്കുക'}`;
         break;
       default:
-        textToSpeak = `${t("scanner.diagnostic_report")}. Crop: ${translatedCrop}. Issue: ${translatedIssue}. Confidence: ${rawScanResult.confidence} percent. Severity: ${rawScanResult.severity}.`;
+        textToSpeak = `Crop diagnosis complete. Your ${translatedCrop} crop has a ${translatedIssue} issue. Confidence is ${rawScanResult.confidence} percent. Severity level is ${rawScanResult.severity}. ${productsText} Safety advice: ${precautionsText || 'Follow clean culture practices.'}`;
         break;
     }
 
@@ -209,6 +243,9 @@ export default function ScannerCard({ onScanStart, onScanComplete }) {
   };
 
   const resetScanner = () => {
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
     setImage(null);
     setScanProgress(0);
     setScanStatus("");
@@ -396,21 +433,67 @@ export default function ScannerCard({ onScanStart, onScanComplete }) {
                   — {getTranslatedIssue(rawScanResult.issue, language)}
                 </span>
               </div>
-              <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
-                <p className="flex items-center gap-1">
-                  <Award className="w-4 h-4 text-yellow-500" />
-                  {t("scanner.confidence")}: <span className="font-bold text-white">{rawScanResult.confidence}%</span>
-                </p>
-                <p className="flex items-center gap-1">
-                  <ShieldAlert className="w-4 h-4 text-red-500" />
-                  Severity: <span className="font-bold text-white">{rawScanResult.severity}</span>
-                </p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4 bg-white/5 border border-white/5 rounded-2xl p-4 text-xs font-label">
+                <div>
+                  <span className="text-gray-500 block uppercase tracking-wider text-[9px] mb-0.5">{t("scanner.confidence")}</span>
+                  <span className="text-white font-bold flex items-center gap-1">
+                    <Award className="w-3.5 h-3.5 text-yellow-500" />
+                    {rawScanResult.confidence}%
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-500 block uppercase tracking-wider text-[9px] mb-0.5">Severity</span>
+                  <span className="text-red-400 font-bold flex items-center gap-1">
+                    <ShieldAlert className="w-3.5 h-3.5 text-red-500" />
+                    {rawScanResult.severity}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-500 block uppercase tracking-wider text-[9px] mb-0.5">Affected Area</span>
+                  <span className="text-white font-bold block">{rawScanResult.affectedArea || "N/A"}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500 block uppercase tracking-wider text-[9px] mb-0.5">Status</span>
+                  <span className="text-green-400 font-bold block capitalize">{rawScanResult.recommendedProducts?.length > 0 ? "Diseased" : "Healthy"}</span>
+                </div>
               </div>
             </div>
 
+            {/* Symptoms & Cause */}
+            {rawScanResult.symptoms && rawScanResult.symptoms.length > 0 && (
+              <div className="space-y-4 font-body text-xs text-gray-300 border-t border-white/5 pt-4">
+                <div>
+                  <strong className="text-secondary block mb-1.5">Symptoms Identified:</strong>
+                  <ul className="list-disc pl-5 space-y-1.5 leading-relaxed text-gray-300">
+                    {rawScanResult.symptoms.map((s, idx) => (
+                      <li key={idx}>{s}</li>
+                    ))}
+                  </ul>
+                </div>
+                {rawScanResult.reason && (
+                  <div>
+                    <strong className="text-secondary block mb-1.5">Reason / Cause:</strong>
+                    <p className="leading-relaxed text-gray-300">{rawScanResult.reason}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Preventive Measures */}
+            {rawScanResult.preventiveMeasures && rawScanResult.preventiveMeasures.length > 0 && (
+              <div className="font-body text-xs text-gray-300 border-t border-white/5 pt-4">
+                <strong className="text-secondary block mb-1.5">Preventive Measures / Precautions:</strong>
+                <ul className="list-decimal pl-5 space-y-1.5 leading-relaxed text-gray-300">
+                  {rawScanResult.preventiveMeasures.map((m, idx) => (
+                    <li key={idx}>{m}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             {/* Explanation box */}
             {rawScanResult.explanation && (
-              <div className="bg-white/5 border border-white/5 rounded-2xl p-4 text-xs font-body text-gray-300 leading-relaxed">
+              <div className="bg-white/5 border border-white/5 rounded-2xl p-4 text-xs font-body text-gray-300 leading-relaxed border-t border-white/5 pt-4">
                 <strong className="text-secondary block mb-1">{t("scanner.recommended_action")}:</strong>
                 {rawScanResult.explanation}
               </div>

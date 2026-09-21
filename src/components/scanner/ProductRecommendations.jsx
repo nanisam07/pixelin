@@ -284,75 +284,6 @@ export default function ProductRecommendations({ ids, onAddToCart, addedProductI
     },
   };
 
-  const renderProductIllustration = (id) => {
-    switch (id) {
-      case "expel-r":
-        return (
-          <svg className="w-20 h-20 filter drop-shadow-[0_0_15px_rgba(239,68,68,0.4)]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="100" height="100" rx="16" fill="url(#expel-grad)" fillOpacity="0.1" stroke="rgba(239,68,68,0.2)" strokeWidth="1.5" />
-            <path d="M50 22L30 31V53.5C30 67 38.5 75.5 50 78C61.5 75.5 70 67 70 53.5V31L50 22Z" fill="rgba(239,68,68,0.2)" stroke="#EF4444" strokeWidth="2.5" strokeLinejoin="round" />
-            <circle cx="50" cy="50" r="10" stroke="#F97316" strokeWidth="2" strokeDasharray="3 3" />
-            <path d="M50 43V57M43 50H57" stroke="#FF6633" strokeWidth="2.5" strokeLinecap="round" />
-            <defs>
-              <linearGradient id="expel-grad" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#EF4444" />
-                <stop offset="1" stopColor="#F97316" />
-              </linearGradient>
-            </defs>
-          </svg>
-        );
-      case "pixel-sensa":
-        return (
-          <svg className="w-20 h-20 filter drop-shadow-[0_0_15px_rgba(16,185,129,0.4)]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="100" height="100" rx="16" fill="url(#sensa-grad)" fillOpacity="0.1" stroke="rgba(16,185,129,0.2)" strokeWidth="1.5" />
-            <path d="M50 24C40 38 32 44 32 58C32 67.9411 40.0589 76 50 76C59.9411 76 68 67.9411 68 58C68 44 60 38 50 24Z" fill="rgba(16, 185, 129, 0.2)" stroke="#10B981" strokeWidth="2.5" />
-            <path d="M50 36V70M50 48L38 42M50 56L62 52" stroke="#34D399" strokeWidth="1.5" strokeLinecap="round" />
-            <circle cx="50" cy="48" r="3" fill="#10B981" />
-            <circle cx="38" cy="42" r="2.5" fill="#34D399" />
-            <circle cx="62" cy="52" r="2.5" fill="#34D399" />
-            <defs>
-              <linearGradient id="sensa-grad" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#10B981" />
-                <stop offset="1" stopColor="#14B8A6" />
-              </linearGradient>
-            </defs>
-          </svg>
-        );
-      case "dodger":
-        return (
-          <svg className="w-20 h-20 filter drop-shadow-[0_0_15px_rgba(59,130,246,0.4)]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="100" height="100" rx="16" fill="url(#dodger-grad)" fillOpacity="0.1" stroke="rgba(59,130,246,0.2)" strokeWidth="1.5" />
-            <path d="M43 25V30H57V25H43Z" fill="rgba(59,130,246,0.3)" stroke="#3B82F6" strokeWidth="2" />
-            <path d="M46 30L34 68C31 77 39 80 50 80C61 80 69 77 66 68L54 30H46Z" fill="rgba(59, 130, 246, 0.15)" stroke="#3B82F6" strokeWidth="2.5" strokeLinejoin="round" />
-            <path d="M37 60H63" stroke="#60A5FA" strokeWidth="1.5" strokeDasharray="2 2" />
-            <circle cx="46" cy="50" r="3" fill="#60A5FA" opacity="0.8" />
-            <circle cx="54" cy="62" r="2" fill="#60A5FA" opacity="0.6" />
-            <circle cx="48" cy="70" r="3.5" fill="#3B82F6" opacity="0.9" />
-            <defs>
-              <linearGradient id="dodger-grad" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#3B82F6" />
-                <stop offset="1" stopColor="#06B6D4" />
-              </linearGradient>
-            </defs>
-          </svg>
-        );
-      default:
-        return (
-          <svg className="w-20 h-20 filter drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="100" height="100" rx="16" fill="url(#default-grad)" fillOpacity="0.1" stroke="rgba(168,85,247,0.2)" strokeWidth="1.5" />
-            <circle cx="50" cy="50" r="18" fill="rgba(168,85,247,0.2)" stroke="#A855F7" strokeWidth="2" />
-            <path d="M50 40V60M40 50H60" stroke="#C084FC" strokeWidth="2" strokeLinecap="round" />
-            <defs>
-              <linearGradient id="default-grad" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#A855F7" />
-                <stop offset="1" stopColor="#EC4899" />
-              </linearGradient>
-            </defs>
-          </svg>
-        );
-    }
-  };
-
   return (
     <div className="w-full">
       <div className="flex items-center gap-2 mb-6">
@@ -384,19 +315,24 @@ export default function ProductRecommendations({ ids, onAddToCart, addedProductI
               whileHover={{ y: -6, transition: { duration: 0.2 } }}
               className={`group flex flex-col justify-between overflow-hidden rounded-3xl border backdrop-blur-xl bg-white/5 shadow-xl transition-all duration-300 p-6 ${product.borderGlow}`}
             >
-              {/* Card Header (Category & Illustration) */}
+              {/* Card Header (Category & Image) */}
               <div>
                 <div className="flex justify-between items-start mb-5">
                   <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-label font-bold uppercase tracking-wider border ${product.bgBadge}`}>
                     {category}
                   </span>
                   <span className="text-gray-400 text-xs font-label">
-                    {t("scanner.dosage")}: <strong className="text-gray-200 font-normal">{product.dosage}</strong>
+                    {t("scanner.dosage")}: <strong className="text-gray-200 font-normal">{product.doseAcre || product.dosage}</strong>
                   </span>
                 </div>
 
-                <div className="flex justify-center mb-6">
-                  {renderProductIllustration(product.id)}
+                {/* Actual Product Image */}
+                <div className="relative w-full h-44 rounded-2xl overflow-hidden bg-black/20 border border-white/5 mb-6 flex items-center justify-center">
+                  <img 
+                    src={product.image} 
+                    alt={product.name} 
+                    className="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-300"
+                  />
                 </div>
 
                 {/* Product Info */}
@@ -406,6 +342,34 @@ export default function ProductRecommendations({ ids, onAddToCart, addedProductI
                 <p className="font-body text-gray-400 text-xs leading-relaxed mb-4">
                   {description}
                 </p>
+
+                {/* Technical Details Grid */}
+                <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-[10px] font-label border-t border-b border-white/5 py-4 mb-4 text-gray-400">
+                  <div>
+                    <span className="block text-gray-500 uppercase tracking-wider text-[8px] mb-0.5">Technical</span>
+                    <span className="text-gray-200 font-medium block truncate" title={product.technical}>{product.technical}</span>
+                  </div>
+                  <div>
+                    <span className="block text-gray-500 uppercase tracking-wider text-[8px] mb-0.5">Dose / Acre</span>
+                    <span className="text-gray-200 font-medium block">{product.doseAcre || product.dosage}</span>
+                  </div>
+                  <div>
+                    <span className="block text-gray-500 uppercase tracking-wider text-[8px] mb-0.5">Suitable Crop</span>
+                    <span className="text-gray-200 font-medium block truncate" title={product.suitableCrop}>{product.suitableCrop}</span>
+                  </div>
+                  <div>
+                    <span className="block text-gray-500 uppercase tracking-wider text-[8px] mb-0.5">Target Pest</span>
+                    <span className="text-gray-200 font-medium block truncate" title={product.targetPest}>{product.targetPest}</span>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="block text-gray-500 uppercase tracking-wider text-[8px] mb-0.5">Method</span>
+                    <span className="text-gray-200 font-medium block">{product.applicationMethod}</span>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="block text-gray-500 uppercase tracking-wider text-[8px] mb-0.5">Advantages</span>
+                    <span className="text-secondary font-medium block leading-relaxed text-[9px]">{product.advantages}</span>
+                  </div>
+                </div>
 
                 {/* Technical "Why Recommended" box */}
                 <div className="bg-white/5 border border-white/5 rounded-xl p-3 mb-6 flex gap-2.5 items-start">

@@ -17,12 +17,40 @@
   --color-lightBg: #f8fafc;
   --color-panelBg: rgba(0, 31, 77, 0.85);
 
+  /* Agriculture Specific Brand Palette */
+  --color-agri-primary: #2E7D32;
+  --color-agri-secondary: #4CAF50;
+  --color-agri-accent: #8BC34A;
+  --color-agri-bg: #F8FFF6;
+  --color-agri-earth: #8D6E63;
+  --color-agri-wheat: #FFC107;
+
   --font-headline: var(--font-playfair), serif;
   --font-body: var(--font-inter), sans-serif;
   --font-label: var(--font-space-grotesk), sans-serif;
 }
 
-/* Custom Scroll animations */
+/* Custom Floating Leaves and Wind animations */
+@keyframes floatLeaf {
+  0% {
+    transform: translateY(0px) rotate(0deg) translateX(0px);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateY(-25px) rotate(15deg) translateX(15px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-50px) rotate(-10deg) translateX(-10px);
+    opacity: 0;
+  }
+}
+
+@keyframes breeze {
+  0%, 100% { transform: skewX(0deg); }
+  50% { transform: skewX(-3deg); }
+}
+
 @keyframes scrollLeft {
   from {
     transform: translateX(0);
@@ -40,7 +68,6 @@
   }
 
   to {
-    opacity: 1;
     transform: translateY(0);
   }
 }
@@ -55,20 +82,20 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #FF6633;
+  background: #2E7D32;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #FF8855;
+  background: #4CAF50;
 }
 
 /* Glassmorphism helpers */
 .glass-card {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(46, 125, 50, 0.12);
 }
 
 .glass-card-dark {
@@ -78,10 +105,17 @@
   border: 1px solid rgba(255, 102, 51, 0.2);
 }
 
+.animate-float {
+  animation: floatLeaf 6s ease-in-out infinite;
+}
+
+.animate-breeze {
+  animation: breeze 8s ease-in-out infinite;
+}
+
 /* Staggered Animations */
 .animate-fade-up {
   animation: fadeUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  opacity: 0;
 }
 
 .delay-1 {

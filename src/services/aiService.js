@@ -216,109 +216,30 @@ export async function understandFarmerQuery(query) {
  * Handles visual crop analysis from image upload or live camera.
  */
 export async function analyzeCropImage(file) {
-  // 1. Plant Leaf Tissue Validation
-  const validation = await validateCropImage(null); // Passing null triggers mock TFJS/MobileNet checks or local fallback
-  if (!validation.isValid && !validation.fallback) {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch("/api/scan", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      return {
+        success: false,
+        error: errData.error || "Failed to analyze image. Please try again."
+      };
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Client side analyzeCropImage error:", error);
     return {
       success: false,
-      error: "Invalid Leaf Image. Please capture a clear leaf showing symptoms of crop damage."
-    };
-  }
-
-  // 2. Identify Crop Genus
-  const plantResult = await identifyPlant(file);
-  const detectedCrop = plantResult.crop; // Paddy, Cotton, Tomato (Vegetables)
-
-  // 3. Multi-modal Disease Prediction
-  try {
-    if (!apiKey) {
-      throw new Error("Gemini API key missing");
-    }
-
-    // Convert file to base64 for Gemini multimodal input
-    const fileToBase64 = (file) =>
-      new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => {
-          const base64String = reader.result.split(",")[1];
-          resolve(base64String);
-        };
-        reader.onerror = error => reject(error);
-      });
-
-    const base64Image = await fileToBase64(file);
-
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-    const prompt = `
-      You are an expert plant pathologist. Inspect this leaf image.
-      Identify the agricultural issue (pest, disease, or nutrient deficiency).
-      Return strictly a JSON structure containing:
-      1. "crop": Identified crop (must be "Paddy", "Cotton", or "Vegetables").
-      2. "issue": Name of disease or pest in English (e.g. "Brown Plant Hopper", "Stem Borer", "Whitefly", "Pink Bollworm", "Leaf Spot").
-      3. "confidence": Confidence percentage (integer 1-100).
-      4. "severity": Severity rating (e.g. "Low (10%)", "Moderate (35%)", "Severe (80%)").
-      5. "explanation": 1-2 sentence advice.
-    `;
-
-    const imageParts = [
-      {
-        inlineData: {
-          data: base64Image,
-          mimeType: file.type
-        }
-      }
-    ];
-
-    const result = await model.generateContent([prompt, ...imageParts]);
-    const responseText = result.response.text();
-    // Parse JSON safely (sometimes returns ```json ... ```)
-    const jsonStr = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
-    const data = JSON.parse(jsonStr);
-
-    const products = await getRecommendationsFromDatasets(data.crop, data.issue);
-    const productIds = products.map(p => p.product.toLowerCase().replace(/[^a-z0-9-]/g, ""));
-
-    return {
-      success: true,
-      crop: data.crop || detectedCrop,
-      issue: data.issue || "Healthy",
-      confidence: data.confidence || plantResult.confidence || 85,
-      severity: data.severity || "Moderate (30%)",
-      explanation: data.explanation || "Apply preventative bio-stimulants.",
-      recommendedProductIds: productIds.length > 0 ? productIds : ["expel-r"]
-    };
-
-  } catch (error) {
-    console.error("Gemini Multimodal failed, falling back to mock classifier:", error);
-    
-    // Scaffolding offline mock logic that simulates TFJS/ONNX outputs
-    let issue = "Healthy";
-    let recommendedProductIds = [];
-    let severity = "Low (10%)";
-
-    if (detectedCrop === "Paddy") {
-      issue = "Stem Borer";
-      recommendedProductIds = ["expel-r", "dodger"];
-      severity = "Moderate (35%)";
-    } else if (detectedCrop === "Cotton") {
-      issue = "Whitefly";
-      recommendedProductIds = ["expel-r", "pixel-sensa"];
-      severity = "Severe (65%)";
-    } else {
-      issue = "Leaf Spot";
-      recommendedProductIds = ["dodger"];
-      severity = "Low (20%)";
-    }
-
-    return {
-      success: true,
-      crop: detectedCrop,
-      issue,
-      confidence: plantResult.confidence || 80,
-      severity,
-      explanation: "Fallback Offline Diagnostic: Foliar lesions identified. Recommend target sprays.",
-      recommendedProductIds
+      error: "Network error. Please check your internet connection and try again."
     };
   }
 }
